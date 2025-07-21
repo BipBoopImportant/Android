@@ -24,9 +24,8 @@
 		"ghcr.io/akhildevelops/devcontainer-features/android-cli:latest": {
 			"PACKAGES": "platform-tools,platforms;android-34,build-tools;34"
 		}
-	}
+	},
 
-  }
 
   // Forward ports if you were to run an emulator or other services. Not strictly needed for building.
   // "forwardPorts": [],
