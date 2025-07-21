@@ -5,19 +5,7 @@
 
   // Add the Android SDK feature. This will download and install the SDK for us.
 	"features": {
-		"ghcr.io/devcontainers/features/java:latest": {
-			"installGradle": true,
-			"installMaven": true,
-			"installAnt": true,
-			"version": "24",
-			"jdkDistro": "oracle",
-			"gradleVersion": "latest",
-			"mavenVersion": "latest",
-			"antVersion": "latest"
-		},
-		"ghcr.io/akhildevelops/devcontainer-features/android-cli:latest": {
-			"PACKAGES": "platform-tools,platforms;android-34,build-tools;34"
-		}
+"ghcr.io/nordcominc/devcontainer-features/android-sdk:1": {}
 	},
 
 
