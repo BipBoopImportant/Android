@@ -15,12 +15,6 @@
 			"mavenVersion": "latest",
 			"antVersion": "latest"
 		},
-		"ghcr.io/devcontainers-contrib/features/meson-asdf:latest": {
-			"version": "latest"
-		},
-		"ghcr.io/balazs23/devcontainers-features/bazel:latest": {
-			"bazelisk": "latest"
-		},
 		"ghcr.io/akhildevelops/devcontainer-features/android-cli:latest": {
 			"PACKAGES": "platform-tools,platforms;android-34,build-tools;34"
 		}
