@@ -10,25 +10,31 @@ import com.avantgarderv.databinding.ActivityAddEditRvBinding
 class AddEditRVActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddEditRvBinding
-    private var existingVin: String? = null
+    private var passedVin: String? = null
+    private var currentRv: RV? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddEditRvBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        existingVin = intent.getStringExtra("VIN")
+        passedVin = intent.getStringExtra("VIN")
 
-        if (existingVin != null) {
-            // This is an edit operation
-            title = "Edit RV"
-            val rv = RVDatabase.findRVByVin(existingVin!!)
-            if (rv != null) {
-                populateFields(rv)
+        if (passedVin != null) {
+            currentRv = RVDatabase.findRVByVin(passedVin!!)
+            if (currentRv != null) {
+                // EDIT MODE
+                title = "Edit RV"
+                populateFields(currentRv!!)
+                binding.editVin.isEnabled = false
+            } else {
+                // ADD FROM SCAN MODE
+                title = "Add New RV"
+                binding.editVin.setText(passedVin)
+                binding.editVin.isEnabled = false
             }
-            binding.editVin.isEnabled = false // Don't allow editing VIN
         } else {
-            // This is an add operation
+            // ADD FROM SCRATCH MODE
             title = "Add New RV"
         }
 
@@ -44,6 +50,7 @@ class AddEditRVActivity : AppCompatActivity() {
         binding.editYear.setText(rv.year.toString())
         binding.editPrice.setText(rv.price.toString())
         binding.editMileage.setText(rv.mileage.toString())
+        binding.editDescription.setText(rv.description)
     }
 
     private fun saveRV() {
@@ -53,16 +60,29 @@ class AddEditRVActivity : AppCompatActivity() {
         val year = binding.editYear.text.toString().toIntOrNull()
         val price = binding.editPrice.text.toString().toDoubleOrNull()
         val mileage = binding.editMileage.text.toString().toIntOrNull()
+        val description = binding.editDescription.text.toString().trim()
 
         if (vin.isEmpty() || make.isEmpty() || model.isEmpty() || year == null || price == null || mileage == null) {
             Toast.makeText(this, "Please fill all fields correctly.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val newRv = RV(vin, make, model, year, price, mileage)
-        RVDatabase.addOrUpdateRV(newRv)
+        // Create or update RV. If new, media URIs will be empty lists by default.
+        val rvToSave = RV(
+            vin = vin,
+            make = make,
+            model = model,
+            year = year,
+            price = price,
+            mileage = mileage,
+            description = description,
+            status = currentRv?.status ?: "In Stock",
+            imageUris = currentRv?.imageUris ?: mutableListOf(),
+            videoUris = currentRv?.videoUris ?: mutableListOf()
+        )
+        RVDatabase.addOrUpdateRV(rvToSave)
 
         Toast.makeText(this, "RV Saved Successfully!", Toast.LENGTH_SHORT).show()
-        finish() // Close the activity and return to the previous one
+        finish()
     }
 }

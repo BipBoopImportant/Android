@@ -53,10 +53,14 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:${cameraxVersion}")
     implementation("androidx.camera:camera-view:${cameraxVersion}")
 
-    // ML Kit dependencies for Barcode Scanning and Text Recognition (OCR)
+    // ML Kit dependency for Barcode Scanning ONLY
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
-    implementation("com.google.mlkit:text-recognition:16.0.0")
 
+    // Explicit Guava dependency for ListenableFuture
+    implementation("com.google.guava:guava:32.0.1-android")
+
+    // Glide for image loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

@@ -34,35 +34,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/toggleScanMode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        app:layout_constraintBottom_toTopOf="@id/manualEntryButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:singleSelection="true"
-        app:selectionRequired="true">
-
-        <Button
-            android:id="@+id/barcodeModeButton"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Barcode"
-            android:textColor="@color/white"/>
-
-        <Button
-            android:id="@+id/ocrModeButton"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="OCR"
-            android:textColor="@color/white"/>
-
-    </com.google.android.material.button.MaterialButtonToggleGroup>
-
     <Button
         android:id="@+id/manualEntryButton"
         android:layout_width="0dp"

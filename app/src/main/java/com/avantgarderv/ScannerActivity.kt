@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
@@ -20,8 +21,6 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
@@ -32,7 +31,6 @@ class ScannerActivity : AppCompatActivity() {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
     private var isProcessing = false
-    private var isBarcodeMode = true
 
     // Regex to validate a 17-character VIN. Excludes I, O, Q.
     private val vinPattern: Pattern = Pattern.compile("^[A-HJ-NPR-Z0-9]{17}$")
@@ -44,21 +42,6 @@ class ScannerActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         startCamera()
-        setupUI()
-    }
-
-    private fun setupUI() {
-        binding.toggleScanMode.check(R.id.barcodeModeButton)
-        binding.toggleScanMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                isBarcodeMode = checkedId == R.id.barcodeModeButton
-                binding.scannerPrompt.text = if (isBarcodeMode) {
-                    "Point camera at VIN Barcode"
-                } else {
-                    "Point camera at written VIN"
-                }
-            }
-        }
 
         binding.manualEntryButton.setOnClickListener {
             showVinInputDialog()
@@ -106,32 +89,32 @@ class ScannerActivity : AppCompatActivity() {
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    private fun processImage(imageProxy: androidx.camera.core.ImageProxy) {
+    private fun processImage(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-
-            if (isBarcodeMode) {
-                scanBarcodes(image, imageProxy)
-            } else {
-                recognizeText(image, imageProxy)
-            }
+            scanBarcodes(image, imageProxy)
+        } else {
+            // If mediaImage is null, close proxy and reset flag
+            imageProxy.close()
+            isProcessing = false
         }
     }
 
-    private fun scanBarcodes(image: InputImage, imageProxy: androidx.camera.core.ImageProxy) {
+    private fun scanBarcodes(image: InputImage, imageProxy: ImageProxy) {
         val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_CODE_39, Barcode.FORMAT_CODE_128, Barcode.FORMAT_QR_CODE)
+            .setBarcodeFormats(Barcode.FORMAT_CODE_39, Barcode.FORMAT_CODE_128, Barcode.FORMAT_DATA_MATRIX)
             .build()
         val scanner = BarcodeScanning.getClient(options)
 
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
-                    val rawValue = barcode.rawValue
+                    val rawValue = barcode.rawValue?.uppercase()
                     if (rawValue != null && vinPattern.matcher(rawValue).matches()) {
+                        // Found a valid VIN, stop processing and return
                         onVinFound(rawValue)
-                        break // Found a valid VIN, stop processing
+                        return@addOnSuccessListener
                     }
                 }
             }
@@ -139,41 +122,15 @@ class ScannerActivity : AppCompatActivity() {
                 Log.e("ScannerActivity", "Barcode scanning failed.", e)
             }
             .addOnCompleteListener {
-                imageProxy.close()
-                isProcessing = false
-            }
-    }
-
-    private fun recognizeText(image: InputImage, imageProxy: androidx.camera.core.ImageProxy) {
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                val fullText = visionText.text.replace("\\s+".toRegex(), "").uppercase()
-                if (vinPattern.matcher(fullText).matches()) {
-                    onVinFound(fullText)
-                } else {
-                    // Search for VIN within text blocks if full text fails
-                    for (block in visionText.textBlocks) {
-                        val blockText = block.text.replace("\\s+".toRegex(), "").uppercase()
-                        if (vinPattern.matcher(blockText).matches()) {
-                            onVinFound(blockText)
-                            break
-                        }
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("ScannerActivity", "Text recognition failed.", e)
-            }
-            .addOnCompleteListener {
+                // This is crucial: always close the imageProxy to continue receiving frames
                 imageProxy.close()
                 isProcessing = false
             }
     }
 
     private fun onVinFound(vin: String) {
-        if (!isFinishing) { // Ensure activity is still active
+        // Ensure we don't finish activity multiple times
+        if (!isFinishing) {
             Log.d("ScannerActivity", "VIN Found: $vin")
             val resultIntent = Intent()
             resultIntent.putExtra("SCAN_RESULT", vin)
@@ -183,6 +140,9 @@ class ScannerActivity : AppCompatActivity() {
     }
 
     private fun showVinInputDialog() {
+        // Prevent dialog from showing if activity is closing
+        if (isFinishing) return
+
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Enter VIN Manually")
 

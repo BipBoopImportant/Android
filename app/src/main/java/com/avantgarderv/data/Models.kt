@@ -9,7 +9,10 @@ data class RV(
     var year: Int,
     var price: Double,
     var mileage: Int,
-    var status: String = "In Stock" // e.g., In Stock, Sold, In Service
+    var status: String = "In Stock",
+    var description: String = "",
+    val imageUris: MutableList<String> = mutableListOf(),
+    val videoUris: MutableList<String> = mutableListOf()
 ) : Serializable
 
 data class Client(
