@@ -14,7 +14,6 @@
         android:theme="@style/Theme.AvantGardeRV"
         tools:targetApi="31">
 
-        <!-- THIS METADATA TAG NOW ONLY REQUESTS THE BARCODE MODEL. -->
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="barcode" />
@@ -27,16 +26,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ScannerActivity"
-            android:label="Scan VIN"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <!-- Core Activities -->
+        <activity android:name=".ScannerActivity" android:label="Scan VIN" android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".InventoryListActivity" android:label="RV Inventory"/>
         <activity android:name=".RVDetailActivity" android:label="RV Details"/>
         <activity android:name=".AddEditRVActivity" android:label="Add/Edit RV"/>
-        <activity android:name=".InspectionActivity" android:label="Start Inspection"/>
+
+        <!-- Feature Activities -->
+        <activity android:name=".InspectionDetailActivity" android:label="Inspection Details"/>
+        <activity android:name=".WorkOrderDetailActivity" android:label="Work Order Details"/>
         <activity android:name=".ServiceAppointmentActivity" android:label="Service Appointment"/>
-        <activity android:name=".WorkOrderActivity" android:label="Create Work Order"/>
+        <activity android:name=".PartsListActivity" android:label="Parts Inventory"/>
+        <activity android:name=".PartDetailActivity" android:label="Part Details"/>
+        <activity android:name=".ClientListActivity" android:label="Clients"/>
+        <activity android:name=".ClientDetailActivity" android:label="Client Details" android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"/>
+
+        <!--
+          FIX: Set the theme to a NoActionBar variant to prevent a fatal theme conflict.
+          This is the critical change that stops the Add/Edit Client screen from crashing.
+        -->
+        <activity android:name=".AddEditClientActivity" android:label="Add/Edit Client" android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"/>
+
     </application>
 
 </manifest>

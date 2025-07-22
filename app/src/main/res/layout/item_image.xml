@@ -4,11 +4,29 @@
     android:layout_height="120dp"
     android:layout_marginEnd="8dp">
 
-    <ImageView
-        android:id="@+id/galleryImageView"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:contentDescription="RV Image"/>
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/galleryImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="RV Image"/>
+
+        <ImageButton
+            android:id="@+id/removeImageButton"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_close"
+            android:layout_gravity="top|end"
+            android:layout_margin="4dp"
+            android:background="@drawable/circular_background"
+            android:contentDescription="Remove Image"
+            android:padding="4dp"
+            android:scaleType="fitCenter"/>
+
+    </FrameLayout>
 
 </com.google.android.material.card.MaterialCardView>

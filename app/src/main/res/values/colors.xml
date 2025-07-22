@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Work Order Status Colors -->
+    <color name="status_pending">#FFC107</color> <!-- Amber -->
+    <color name="status_in_progress">#2196F3</color> <!-- Blue -->
+    <color name="status_blocked">#F44336</color> <!-- Red -->
+    <color name="status_completed">#4CAF50</color> <!-- Green -->
 </resources>

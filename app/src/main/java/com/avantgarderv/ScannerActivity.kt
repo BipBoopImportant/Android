@@ -27,10 +27,18 @@ import java.util.regex.Pattern
 
 class ScannerActivity : AppCompatActivity() {
 
+    companion object {
+        const val SCAN_MODE = "SCAN_MODE"
+        const val SCAN_RESULT = "SCAN_RESULT"
+        const val MODE_VIN = "VIN"
+        const val MODE_PART = "PART"
+    }
+
     private lateinit var binding: ActivityScannerBinding
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
     private var isProcessing = false
+    private var scanMode: String = MODE_VIN // Default to VIN
 
     // Regex to validate a 17-character VIN. Excludes I, O, Q.
     private val vinPattern: Pattern = Pattern.compile("^[A-HJ-NPR-Z0-9]{17}$")
@@ -40,11 +48,27 @@ class ScannerActivity : AppCompatActivity() {
         binding = ActivityScannerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        scanMode = intent.getStringExtra(SCAN_MODE) ?: MODE_VIN
+        setupUIForMode()
+
         cameraExecutor = Executors.newSingleThreadExecutor()
         startCamera()
 
         binding.manualEntryButton.setOnClickListener {
-            showVinInputDialog()
+            showManualInputDialog()
+        }
+    }
+
+    private fun setupUIForMode() {
+        when (scanMode) {
+            MODE_VIN -> {
+                binding.scannerPrompt.text = "Point camera at VIN Barcode"
+                binding.manualEntryButton.text = "Enter VIN Manually"
+            }
+            MODE_PART -> {
+                binding.scannerPrompt.text = "Point camera at Part Barcode"
+                binding.manualEntryButton.text = "Enter Part # Manually"
+            }
         }
     }
 
@@ -95,26 +119,23 @@ class ScannerActivity : AppCompatActivity() {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
             scanBarcodes(image, imageProxy)
         } else {
-            // If mediaImage is null, close proxy and reset flag
             imageProxy.close()
             isProcessing = false
         }
     }
 
     private fun scanBarcodes(image: InputImage, imageProxy: ImageProxy) {
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_CODE_39, Barcode.FORMAT_CODE_128, Barcode.FORMAT_DATA_MATRIX)
-            .build()
+        // Scan for all supported formats. The app logic will validate the result.
+        val options = BarcodeScannerOptions.Builder().build()
         val scanner = BarcodeScanning.getClient(options)
 
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
-                    val rawValue = barcode.rawValue?.uppercase()
-                    if (rawValue != null && vinPattern.matcher(rawValue).matches()) {
-                        // Found a valid VIN, stop processing and return
-                        onVinFound(rawValue)
-                        return@addOnSuccessListener
+                    val rawValue = barcode.rawValue
+                    if (!rawValue.isNullOrEmpty() && isValid(rawValue)) {
+                        onScanSuccess(rawValue.uppercase())
+                        return@addOnSuccessListener // Found a valid code, stop processing
                     }
                 }
             }
@@ -122,44 +143,47 @@ class ScannerActivity : AppCompatActivity() {
                 Log.e("ScannerActivity", "Barcode scanning failed.", e)
             }
             .addOnCompleteListener {
-                // This is crucial: always close the imageProxy to continue receiving frames
                 imageProxy.close()
                 isProcessing = false
             }
     }
 
-    private fun onVinFound(vin: String) {
-        // Ensure we don't finish activity multiple times
+    private fun isValid(value: String): Boolean {
+        return when (scanMode) {
+            MODE_VIN -> vinPattern.matcher(value.uppercase()).matches()
+            MODE_PART -> value.isNotEmpty() // Any non-empty barcode is a valid part number
+            else -> false
+        }
+    }
+
+    private fun onScanSuccess(result: String) {
         if (!isFinishing) {
-            Log.d("ScannerActivity", "VIN Found: $vin")
+            Log.d("ScannerActivity", "$scanMode Found: $result")
             val resultIntent = Intent()
-            resultIntent.putExtra("SCAN_RESULT", vin)
+            resultIntent.putExtra(SCAN_RESULT, result)
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
         }
     }
 
-    private fun showVinInputDialog() {
-        // Prevent dialog from showing if activity is closing
+    private fun showManualInputDialog() {
         if (isFinishing) return
 
+        val title = if (scanMode == MODE_VIN) "Enter VIN Manually" else "Enter Part # Manually"
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Enter VIN Manually")
+        builder.setTitle(title)
 
         val input = EditText(this)
         input.setSingleLine()
         builder.setView(input)
 
         builder.setPositiveButton("Submit") { dialog, _ ->
-            val vin = input.text.toString().trim().uppercase()
-            if (vin.isNotEmpty()) {
-                if (vinPattern.matcher(vin).matches()) {
-                    onVinFound(vin)
-                } else {
-                    showToast("Invalid VIN format. Must be 17 characters.")
-                }
+            val value = input.text.toString().trim()
+            if (isValid(value)) {
+                onScanSuccess(value.uppercase())
             } else {
-                showToast("VIN cannot be empty.")
+                val errorMsg = if (scanMode == MODE_VIN) "Invalid VIN format. Must be 17 characters." else "Part number cannot be empty."
+                showToast(errorMsg)
             }
             dialog.dismiss()
         }

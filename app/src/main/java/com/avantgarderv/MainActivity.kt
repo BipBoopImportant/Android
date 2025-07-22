@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
-                startScanner()
+                launchVinScanner()
             } else {
                 showToast("Camera permission is required to scan VINs.")
             }
@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     private val scannerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val vin = result.data?.getStringExtra("SCAN_RESULT")
+                val vin = result.data?.getStringExtra(ScannerActivity.SCAN_RESULT)
                 if (!vin.isNullOrEmpty()) {
                     handleVin(vin)
                 }
@@ -48,12 +48,20 @@ class MainActivity : AppCompatActivity() {
         binding.viewInventoryButton.setOnClickListener {
             startActivity(Intent(this, InventoryListActivity::class.java))
         }
+
+        binding.managePartsButton.setOnClickListener {
+            startActivity(Intent(this, PartsListActivity::class.java))
+        }
+
+        binding.manageClientsButton.setOnClickListener {
+            startActivity(Intent(this, ClientListActivity::class.java))
+        }
     }
 
     private fun checkCameraPermissionAndStartScanner() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
-                startScanner()
+                launchVinScanner()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                 showPermissionRationale()
@@ -64,8 +72,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startScanner() {
-        scannerLauncher.launch(Intent(this, ScannerActivity::class.java))
+    private fun launchVinScanner() {
+        val intent = Intent(this, ScannerActivity::class.java)
+        intent.putExtra(ScannerActivity.SCAN_MODE, ScannerActivity.MODE_VIN)
+        scannerLauncher.launch(intent)
     }
 
     private fun showPermissionRationale() {
@@ -107,18 +117,18 @@ class MainActivity : AppCompatActivity() {
     private fun showExistingRvActions(vin: String) {
         val actions = arrayOf(
             "Verify/View RV Details",
-            "Start Inspection",
-            "Create Service Appointment",
-            "Create Work Order"
+            "Start New Inspection",
+            "Create Work Order",
+            "Create Service Appointment"
         )
         AlertDialog.Builder(this)
             .setTitle("Existing RV Found: $vin")
             .setItems(actions) { _, which ->
                 val intent = when (which) {
                     0 -> Intent(this, RVDetailActivity::class.java)
-                    1 -> Intent(this, InspectionActivity::class.java)
-                    2 -> Intent(this, ServiceAppointmentActivity::class.java)
-                    3 -> Intent(this, WorkOrderActivity::class.java)
+                    1 -> Intent(this, InspectionDetailActivity::class.java)
+                    2 -> Intent(this, WorkOrderDetailActivity::class.java)
+                    3 -> Intent(this, ServiceAppointmentActivity::class.java)
                     else -> null
                 }
                 intent?.putExtra("VIN", vin)

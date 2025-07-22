@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Avant-Garde RV</string>
+
+    <string-array name="inspection_types">
+        <item>PDI (Pre-Delivery Inspection)</item>
+        <item>Warranty</item>
+        <item>Evaluation</item>
+        <item>Service Check-in</item>
+    </string-array>
 </resources>

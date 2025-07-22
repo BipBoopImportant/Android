@@ -23,6 +23,19 @@
             android:src="@drawable/ic_play_circle"
             android:layout_gravity="center"
             android:contentDescription="Play Video"/>
+
+        <ImageButton
+            android:id="@+id/removeVideoButton"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_close"
+            android:layout_gravity="top|end"
+            android:layout_margin="4dp"
+            android:background="@drawable/circular_background"
+            android:contentDescription="Remove Video"
+            android:padding="4dp"
+            android:scaleType="fitCenter"/>
+
     </FrameLayout>
 
 </com.google.android.material.card.MaterialCardView>
