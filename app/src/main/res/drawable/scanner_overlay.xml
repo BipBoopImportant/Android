@@ -1,0 +1,10 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="#00000000" /> <!-- Transparent fill -->
+
+    <stroke
+        android:width="250dp"
+        android:color="#99000000" /> <!-- Semi-transparent black border, very thick to create the overlay effect -->
+
+</shape>

@@ -1,11 +1,15 @@
 package com.avantgarderv
 
+import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.avantgarderv.data.RVDatabase
 import com.avantgarderv.databinding.ActivityMainBinding
 
@@ -13,13 +17,32 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                startScanner()
+            } else {
+                showToast("Camera permission is required to scan VINs.")
+            }
+        }
+
+    private val scannerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val vin = result.data?.getStringExtra("SCAN_RESULT")
+                if (!vin.isNullOrEmpty()) {
+                    handleVin(vin)
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.scanVinButton.setOnClickListener {
-            showVinInputDialog()
+            checkCameraPermissionAndStartScanner()
         }
 
         binding.viewInventoryButton.setOnClickListener {
@@ -27,34 +50,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showVinInputDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Enter VIN")
-        builder.setMessage("Simulating VIN scan (Barcode/OCR). Please enter a VIN manually.")
-
-        val input = EditText(this)
-        builder.setView(input)
-
-        builder.setPositiveButton("Submit") { dialog, _ ->
-            val vin = input.text.toString().trim()
-            if (vin.isNotEmpty()) {
-                handleVin(vin)
-            } else {
-                showToast("VIN cannot be empty.")
+    private fun checkCameraPermissionAndStartScanner() {
+        when {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                startScanner()
             }
-            dialog.dismiss()
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                showPermissionRationale()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
-        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-        builder.show()
+    }
+
+    private fun startScanner() {
+        scannerLauncher.launch(Intent(this, ScannerActivity::class.java))
+    }
+
+    private fun showPermissionRationale() {
+        AlertDialog.Builder(this)
+            .setTitle("Camera Permission Needed")
+            .setMessage("This app needs camera access to scan VIN barcodes and text. Please grant permission.")
+            .setPositiveButton("OK") { _, _ ->
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun handleVin(vin: String) {
         val existingRv = RVDatabase.findRVByVin(vin)
         if (existingRv != null) {
-            // RV exists, show actions for existing RV
             showExistingRvActions(vin)
         } else {
-            // RV is new, show actions for a new RV
             showNewRvActions(vin)
         }
     }
@@ -86,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Existing RV Found: $vin")
             .setItems(actions) { _, which ->
                 val intent = when (which) {
-                    0 -> Intent(this, RVDetailActivity::class.java) // Verify Details
+                    0 -> Intent(this, RVDetailActivity::class.java)
                     1 -> Intent(this, InspectionActivity::class.java)
                     2 -> Intent(this, ServiceAppointmentActivity::class.java)
                     3 -> Intent(this, WorkOrderActivity::class.java)
@@ -99,6 +128,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }
