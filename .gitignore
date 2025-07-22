@@ -1,0 +1,10 @@
+# IDE files
+.idea/
+*.iml
+.gradle/
+build/
+local.properties
+
+# Keystore files
+*.jks
+*.keystore

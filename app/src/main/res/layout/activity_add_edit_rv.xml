@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText android:id="@+id/editVin" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="VIN (Vehicle Identification Number)" />
+    <EditText android:id="@+id/editMake" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Make (e.g., Thor)" android:layout_marginTop="8dp"/>
+    <EditText android:id="@+id/editModel" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Model (e.g., Majestic)" android:layout_marginTop="8dp"/>
+    <EditText android:id="@+id/editYear" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Year" android:inputType="number" android:layout_marginTop="8dp"/>
+    <EditText android:id="@+id/editPrice" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Price" android:inputType="numberDecimal" android:layout_marginTop="8dp"/>
+    <EditText android:id="@+id/editMileage" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Mileage" android:inputType="number" android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save RV"
+        android:layout_marginTop="24dp"/>
+
+</LinearLayout>

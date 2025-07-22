@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!--
+       In this file you can specify which files/directories should be backed up.
+       For more information see:
+       https://developer.android.com/guide/topics/data/autobackup
+        -->
+        <include domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="device.xml"/>
+    </cloud-backup>
+</data-extraction-rules>
